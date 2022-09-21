@@ -290,12 +290,10 @@ class WebinarEventController extends Controller
      */
     public function destroy($id)
     {
-        try {
-            // Master Table (Webinar Event) Data Check Exists or Not
-            if (!isset($this->repository)) {
-                $this->errorResponse('Repository not defined');
-            }
 
+        try {
+
+            // Master Table (Webinar Event) Data Fetch
             $entity = $this->repository->findById($id);
 
             if (!$entity) {
@@ -304,7 +302,7 @@ class WebinarEventController extends Controller
 
             // Webinar Session Time Table Data Deleted
             if (!isset($this->webinarEventSessionTimeRepository)) {
-                $this->errorResponse('Repository not defined');
+                $this->errorResponse('Session Time Repository not defined');
             }
 
             $webinarSessionTimeIds = $this->webinarEventSessionTimeRepository->getWebinarSessionTimeDetailIdsByEventId($id);
@@ -316,16 +314,39 @@ class WebinarEventController extends Controller
             }
 
             // Webinar Reporter Details Table Data Deleted
-            if (!isset($this->WebinarEventReporterDetailRepository)) {
-                $this->errorResponse('Repository not defined');
+            if (!isset($this->webinarEventReporterDetailRepository)) {
+                $this->errorResponse('Reporter Details Repository not defined');
             }
 
-            $webinarReportersIds = $this->WebinarEventReporterDetailRepository->getWebinarReporterDetailIdsByEventId($id);
+            $webinarReportersIds = $this->webinarEventReporterDetailRepository->getWebinarReporterDetailIdsByEventId($id);
 
             if (!empty($webinarReportersIds)) {
                 foreach ($webinarReportersIds as $key => $reporterIds) {
-                    $this->WebinarEventReporterDetailRepository->delete($reporterIds);
+                    $this->webinarEventReporterDetailRepository->delete($reporterIds);
                 }
+            }
+
+            // Fetch Particular Event Data from Webinar Event Table
+            $eventInfo = $this->repository->findById($id);
+
+            // Get Live Meeting Account from Webinar Event Table
+            $liveMeetingAccountRepository = new LiveMeetingAccountRepository();
+            $liveAccountInfo = $liveMeetingAccountRepository->findById($eventInfo->live_meeting_account_id);
+
+            // Apply Condition Where the Live Meeting Account is Empty or Not
+            if (!empty($liveAccountInfo)) {
+
+                // Set Api Key and Secret from Live Meeting Setup Account
+                $zoomAccount = new \MacsiDigital\Zoom\Support\Entry($liveAccountInfo->api_key, $liveAccountInfo->api_secret);
+
+                // Get the Email which Meetings will be Updated
+                $user = $zoomAccount->user()->find($liveAccountInfo->email);
+
+                // Delete Meeting
+                $user->meetings()->find($eventInfo->meeting_id)->delete();
+
+            } else {
+                throw new Exception("Meeting Account does not exist");
             }
 
             //  Master Table (Webinar Event) Data Deleted
