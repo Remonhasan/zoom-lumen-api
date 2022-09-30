@@ -1,24 +1,79 @@
-# Lumen PHP Framework
+# Zoom Lumen Api
+This repository belongs to with an implementation of `Zoom api` where the lumen framework is used independently. Besides a initial package is used for general settings.
 
-[![Build Status](https://travis-ci.org/laravel/lumen-framework.svg)](https://travis-ci.org/laravel/lumen-framework)
-[![Total Downloads](https://img.shields.io/packagist/dt/laravel/lumen-framework)](https://packagist.org/packages/laravel/lumen-framework)
-[![Latest Stable Version](https://img.shields.io/packagist/v/laravel/lumen-framework)](https://packagist.org/packages/laravel/lumen-framework)
-[![License](https://img.shields.io/packagist/l/laravel/lumen)](https://packagist.org/packages/laravel/lumen-framework)
+## Installation
 
-Laravel Lumen is a stunningly fast PHP micro-framework for building web applications with expressive, elegant syntax. We believe development must be an enjoyable, creative experience to be truly fulfilling. Lumen attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as routing, database abstraction, queueing, and caching.
+You can install the package via composer:
 
-## Official Documentation
+```bash
+composer require macsidigital/laravel-zoom
+```
 
-Documentation for the framework can be found on the [Lumen website](https://lumen.laravel.com/docs).
+For versioning:-
 
-## Contributing
+- 1.0 - deprecated - was a quick build for a client project, not recommended you use this version.
 
-Thank you for considering contributing to Lumen! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+- 2.0 - Laravel 5.5 - 5.8 - deprecated, no longer maintained
 
-## Security Vulnerabilities
+- 3.0 - Laravel 6.0 - Maintained, feel free to create pull requests.  This is open source which is a 2 way street.
 
-If you discover a security vulnerability within Lumen, please send an e-mail to Taylor Otwell at taylor@laravel.com. All security vulnerabilities will be promptly addressed.
+- 4.0 - Laravel 7.0 - 8.0 - Maintained, feel free to create pull requests.  This is open source which is a 2 way street.
 
-## License
+### Configuration file
 
-The Lumen framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Publish the configuration file
+
+```bash
+php artisan vendor:publish --provider="MacsiDigital\Zoom\Providers\ZoomServiceProvider"
+```
+
+This will create a zoom.php config file within your config directory:-
+
+```php
+return [
+    'apiKey' => env('ZOOM_CLIENT_KEY'),
+    'apiSecret' => env('ZOOM_CLIENT_SECRET'),
+    'baseUrl' => 'https://api.zoom.us/v2/',
+    'token_life' => 60 * 60 * 24 * 7, // In seconds, default 1 week
+    'authentication_method' => 'jwt', // Only jwt compatible at present
+    'max_api_calls_per_request' => '5' // how many times can we hit the api to return results for an all() request
+];
+```
+
+You need to add ZOOM_CLIENT_KEY and ZOOM_CLIENT_SECRET into your .env file.
+
+Also note the tokenLife, there were numerous users of the old API who said the token expired to quickly, so we have set for a longer lifeTime by default and more importantly made it customisable.
+
+That should be it.
+
+### Connecting
+
+To get an access point you can simply create a new instance and the resource.
+
+``` php
+    $user = Zoom::user();
+```
+
+### Accessing models
+
+There are 2 main ways to work with models, to call them directly from the access entry point via a facade, or to call them in the standard php 'new' method and pass in the access entry point
+
+``` php
+    $user = Zoom::user();
+    //or
+    
+    $zoom = new \MacsiDigital\Zoom\Support\Entry;
+    $user = new \MacsiDigital\Zoom\User($zoom);
+```
+
+### Custom settings
+If you would like to use different configuration values than those in your zoom.php config file, you can feed those as parameters to \MacsiDigital\Zoom\Support\Entry as shown below.
+``` php
+    $zoom = new \MacsiDigital\Zoom\Support\Entry($apiKey, $apiSecret, $tokenLife, $maxQueries, $baseUrl);
+```
+
+### General Implementation Workflow
+
+The zoom meetings are created by maintaining different zoom account of different organization. Therefore, a live meeting account table set up is created where the 
+`api_key` and 'serect_key' is added initially. After that, the account credientials are fetched and the implementation has been done in `controllers/WebinarEventController` mentioning the `store` , `update` and `delete`.
+
