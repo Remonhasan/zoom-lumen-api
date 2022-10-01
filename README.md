@@ -75,5 +75,5 @@ If you would like to use different configuration values than those in your zoom.
 ### General Implementation Workflow
 
 The zoom meetings are created by maintaining different zoom account of different organization. Therefore, a live meeting account table set up is created where the 
-`api_key` and 'serect_key' is added initially. After that, the account credientials are fetched and the implementation has been done in `controllers/WebinarEventController` mentioning the `store` , `update` and `delete`.
+`api_key` and `secret_key` is added initially. After that, the account credientials are fetched and the implementation has been done in `controllers/WebinarEventController` mentioning the `store` , `update` and `delete`.
 
